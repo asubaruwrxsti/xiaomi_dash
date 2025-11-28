@@ -58,23 +58,22 @@
     font-weight: 300;
     line-height: 1.6;
     height: 250px; 
-    overflow-y: auto;
     opacity: 0.9;
-    padding-right: 10px;
+    position: relative;
   }
-  #news::-webkit-scrollbar {
-    width: 6px;
+  .news-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
   }
-  #news::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.1);
-    border-radius: 3px;
+  .news-page.active {
+    opacity: 1;
   }
-  #news::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.3);
-    border-radius: 3px;
-  }
-  #news div {
-    margin-bottom: 12px;
+  .news-page div {
+    margin-bottom: 16px;
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
   }
 </style>
@@ -157,23 +156,53 @@ loadWeather();
 setInterval(loadWeather, 10 * 60 * 1000);
 
 // NEWS (Hacker News)
+let newsData = [];
+let currentPage = 0;
+
 async function loadNews() {
   try {
     const data = await fetch(
       "https://hn.algolia.com/api/v1/search?tags=front_page"
     ).then(r => r.json());
 
-    newsEl.innerHTML = data.hits
-      .slice(0, 10)
-      .map(n => `<div>• ${n.title}</div>`)
-      .join("");
+    newsData = data.hits.slice(0, 15);
+    renderNewsPage();
   } catch (err) {
     newsEl.textContent = "News unavailable";
     console.error(err);
   }
 }
+
+function renderNewsPage() {
+  if (newsData.length === 0) return;
+  
+  const pages = [];
+  for (let i = 0; i < newsData.length; i += 3) {
+    pages.push(newsData.slice(i, i + 3));
+  }
+  
+  newsEl.innerHTML = pages
+    .map((pageItems, idx) => {
+      const items = pageItems.map(n => `<div>• ${n.title}</div>`).join("");
+      return `<div class="news-page ${idx === 0 ? 'active' : ''}">${items}</div>`;
+    })
+    .join("");
+  
+  currentPage = 0;
+}
+
+function rotateNews() {
+  const pages = document.querySelectorAll('.news-page');
+  if (pages.length === 0) return;
+  
+  pages[currentPage].classList.remove('active');
+  currentPage = (currentPage + 1) % pages.length;
+  pages[currentPage].classList.add('active');
+}
+
 loadNews();
 setInterval(loadNews, 5 * 60 * 1000);
+setInterval(rotateNews, 8000);
 </script>
 </body>
 </html>

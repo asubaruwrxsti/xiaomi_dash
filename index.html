@@ -33,24 +33,31 @@
     box-sizing: border-box;
   }
   #clock { 
-    font-size: 52px; 
+    font-size: 64px; 
     font-weight: 300; 
     letter-spacing: -1px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     text-shadow: 0 2px 10px rgba(0,0,0,0.5);
   }
   #weather { 
-    font-size: 24px; 
+    font-size: 32px; 
     font-weight: 300;
-    margin: 15px 0 25px 0;
+    margin: 15px 0 30px 0;
     opacity: 0.95;
     text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  #weather-icon {
+    font-size: 48px;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
   }
   #news { 
-    font-size: 16px; 
+    font-size: 19px; 
     font-weight: 300;
     line-height: 1.6;
-    height: 280px; 
+    height: 250px; 
     overflow-y: auto;
     opacity: 0.9;
     padding-right: 10px;
@@ -77,7 +84,7 @@
 <div id="bg"></div>
 <div id="overlay">
   <div id="clock"></div>
-  <div id="weather">Loading weather…</div>
+  <div id="weather"><span id="weather-icon">☀️</span><span id="weather-text">Loading weather…</span></div>
   <div id="news">Loading news…</div>
 </div>
 
@@ -113,6 +120,16 @@ nextBg();
 setInterval(nextBg, 15000);
 
 // WEATHER (Open-Meteo)
+const weatherIcons = {
+  0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+  45: '🌫️', 48: '🌫️',
+  51: '🌦️', 53: '🌦️', 55: '🌦️',
+  61: '🌧️', 63: '🌧️', 65: '🌧️',
+  71: '🌨️', 73: '🌨️', 75: '🌨️',
+  80: '🌦️', 81: '🌦️', 82: '🌧️',
+  95: '⛈️', 96: '⛈️', 99: '⛈️'
+};
+
 async function loadWeather() {
   try {
     const city = "Tirana";
@@ -128,9 +145,11 @@ async function loadWeather() {
     ).then(b => b.json());
 
     const w = data.current_weather;
-    weatherEl.textContent = `${city}: ${w.temperature}°C, wind ${w.windspeed} km/h`;
+    const icon = weatherIcons[w.weathercode] || '🌡️';
+    document.getElementById('weather-icon').textContent = icon;
+    document.getElementById('weather-text').textContent = `${city}: ${w.temperature}°C, wind ${w.windspeed} km/h`;
   } catch (err) {
-    weatherEl.textContent = "Weather unavailable";
+    document.getElementById('weather-text').textContent = "Weather unavailable";
     console.error(err);
   }
 }
